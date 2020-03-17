@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -13,7 +13,8 @@ class Oasis(Dataset):
         csv_path: str = None,
         root: str = None,
         target_column: str = "CDR",
-        transform_labels=True,
+        transform_labels: bool = True,
+        normalise: str = "mean",
     ):
         """
         Basic Dataset class providing the dataset as a numpy array, pandas DataFrame, or as a torch
@@ -32,6 +33,8 @@ class Oasis(Dataset):
             this is not None is you want to provide the absolute path for the csv_file.
             target_column (str, optional): The target feature, i.e., Clinical
              Dementia Rating. Defaults to "CDR"
+            transform_labels (bool, optional): If the str type categorical or ordinal columns should be transformed into integers. The mapping is saved as an attribute of the class.
+            normalise (str, optional): Tells the class how the dataset is supposed to be normalised. "mean" would standardise the data with mean 0. "minmax" would normalise the data around 0 and 1. None would keep the data as is. Other values shall throw an error.
         """
 
         csv_file_abs = self.figure_out_csv_path(csv_path, root)
@@ -40,6 +43,15 @@ class Oasis(Dataset):
             dataframe, self.inverse_map = self.cat_to_int_encoder(pd.read_csv(csv_file_abs))
         else:
             dataframe = pd.read_csv(csv_file_abs)
+
+        if normalise == "mean":
+            dataframe = (dataframe - dataframe.mean()) / dataframe.std()
+        elif normalise == "minmax":
+            dataframe = (dataframe - dataframe.min()) / (dataframe.max() - dataframe.min())
+        elif normalise is None:
+            pass
+        else:
+            raise ValueError("Unvalid value passed for argument `normalise`.")
 
         self.dataframe = dataframe
 
@@ -122,7 +134,7 @@ class Oasis(Dataset):
         Returns:
             absolute path: Our guess for the absolute path for the csv_file.
         """
-        dir_path = pathlib.Path(__file__).parent.absolute()        
+        dir_path = pathlib.Path(__file__).parent.absolute()
         oasis_relative_csv_path = "../../dat/alzheimer/oasis_longitudinal.csv"
         if root is None:
             if csv_path is None:
