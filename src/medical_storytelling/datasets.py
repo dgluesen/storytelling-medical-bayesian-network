@@ -122,8 +122,8 @@ class Oasis(Dataset):
         Returns:
             absolute path: Our guess for the absolute path for the csv_file.
         """
-        dir_path = pathlib.Path(__file__).parent.absolute()
-        oasis_relative_csv_path = "../dat/alzheimer/oasis_longitudinal.csv"
+        dir_path = pathlib.Path(__file__).parent.absolute()        
+        oasis_relative_csv_path = "../../dat/alzheimer/oasis_longitudinal.csv"
         if root is None:
             if csv_path is None:
                 csv_path = oasis_relative_csv_path
